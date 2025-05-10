@@ -1,33 +1,100 @@
-import model.*;
-import marketplace.*;
+import marketplace.BookMarketplace;
+import marketplace.Marketing;
+import model.Book;
+import model.PurchaseData;
+import model.User;
+import security.*;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        BookMarketplace store = new BookMarketplace();
-        Marketing marketing = new Marketing();
+        try {
+            Connection conn = DriverManager.getConnection("jdbc:h2:./bookmarketdb", "sa", "");
 
-        User alice = new User("Alice", "customer", "123", true);
-        User bob = new User("Bob", "vendor", "456", false);
-        User admin = new User("Admin", "marketplace", "HQ", false);
+            BookMarketplace store = new BookMarketplace(conn);
 
-        Book book1 = new Book("LFS", "Sebastian", 50, bob.name);
-        Book book2 = new Book("Java", "ABC", 30, bob.name);
+            User alice = new User("Alice", "customer", "123 Main St", true);
+            User bob = new User("Bob", "vendor", "456 Vendor Ln", false);
+            User admin = new User("Admin", "marketplace", "HQ", false);
 
-        store.addBook(book1, bob);
-        store.addBook(book2, bob);
+            conn.createStatement().executeUpdate(
+                    "MERGE INTO Users (name, role, address, consentToMarketing) KEY(name) VALUES " +
+                            "('Alice', 'customer', '123 Main St', true)"
+            );
+            conn.createStatement().executeUpdate(
+                    "MERGE INTO Users (name, role, address, consentToMarketing) KEY(name) VALUES " +
+                            "('Bob', 'vendor', '456 Vendor Ln', false)"
+            );
+            conn.createStatement().executeUpdate(
+                    "MERGE INTO Users (name, role, address, consentToMarketing) KEY(name) VALUES " +
+                            "('Admin', 'marketplace', 'HQ', false)"
+            );
 
-        //simulate search
-        System.out.println("Search results for 'Java':");
-        for (Book b : store.searchBooks("Java", alice)) {
-            System.out.println(b);
+            Book book1 = new Book(
+                    "Core Java",
+                    "Yasu",
+                    40,
+                    bob.name,
+                    2023,
+                    "1st",
+                    "TechBooks",
+                    "New",
+                    "Comprehensive Java guide"
+            );
+            store.offer(book1, bob);
+
+            System.out.println("\nSearch results for 'Java':");
+            List<Book> results = store.search("Java", alice);
+            if (results.isEmpty()) {
+                System.out.println("No matching books found.");
+            } else {
+                for (Book b : results) {
+                    System.out.println(b);
+                }
+            }
+
+            String confirmation = store.purchase(1, alice, 40);
+            System.out.println("\n" + confirmation);
+
+            System.out.println("\nBooks currently in stock:");
+            PreparedStatement ps = conn.prepareStatement(
+                    "SELECT * FROM Books WHERE NOT EXISTS " +
+                            "(SELECT 1 FROM Purchases p WHERE p.bookId = Books.id)"
+            );
+            ResultSet rs = ps.executeQuery();
+            boolean anyInStock = false;
+            while (rs.next()) {
+                anyInStock = true;
+                Book b = new Book(
+                        rs.getString("title"),
+                        rs.getString("author"),
+                        rs.getDouble("price"),
+                        rs.getString("vendor"),
+                        rs.getInt("publication_year"),
+                        rs.getString("edition"),
+                        rs.getString("publisher"),
+                        rs.getString("book_condition"),
+                        rs.getString("description")
+                );
+                System.out.println(b);
+            }
+            if (!anyInStock) {
+                System.out.println("No books currently in stock.");
+            }
+
+            System.out.println("\nMarketing report for Admin:");
+            Marketing marketing = new Marketing();
+            List<PurchaseData> purchases = store.getAllPurchases(conn);
+            marketing.analyzeData(purchases, admin);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-
-        store.purchaseBook(alice, book1);
-
-        System.out.println("\nSales visible to Admin:");
-        store.viewSales(admin);
-
-        System.out.println("\nMarketing data:");
-        marketing.analyzeData(store.getAllSales());
     }
 }
