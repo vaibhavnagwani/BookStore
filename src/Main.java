@@ -1,9 +1,8 @@
 import marketplace.BookMarketplace;
 import marketplace.Marketing;
 import model.Book;
-import model.PurchaseData;
+import model.Purchase;
 import model.User;
-import security.*;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -102,7 +101,7 @@ public class Main {
 
             System.out.println("\nMarketing report for Admin:");
             Marketing marketing = new Marketing();
-            List<PurchaseData> purchases = store.getAllPurchases(conn);
+            List<Purchase> purchases = store.getAllPurchases(conn);
             marketing.analyzeData(purchases, admin);
 
         } catch (SQLException e) {

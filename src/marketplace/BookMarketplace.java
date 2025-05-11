@@ -196,8 +196,8 @@ public class BookMarketplace {
     }
 
 
-    public List<PurchaseData> getAllPurchases(Connection conn) throws SQLException {
-        List<PurchaseData> purchases = new ArrayList<>();
+    public List<Purchase> getAllPurchases(Connection conn) throws SQLException {
+        List<Purchase> purchases = new ArrayList<>();
 
         PreparedStatement ps = conn.prepareStatement(
                 "SELECT p.bookId, p.buyer, b.title, b.author, b.price, b.vendor, " +
@@ -228,7 +228,7 @@ public class BookMarketplace {
                     rs.getBoolean("consentToMarketing")
             );
             Label label = new Label(new Principal(buyer.name));
-            purchases.add(new PurchaseData(book, buyer, label));
+            purchases.add(new Purchase(book, buyer, label));
         }
 
         System.out.println("All purchases retrieved successfully.");

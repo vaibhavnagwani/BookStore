@@ -15,7 +15,7 @@ public class Principal {
 
     @Override
     public int hashCode() {
-        // required for using Principal in sets/maps
+        // required for using Principal in maps
         return name.hashCode();
     }
 
