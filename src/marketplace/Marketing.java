@@ -1,6 +1,6 @@
 package marketplace;
 
-import model.Purchase;
+import model.PurchaseData;
 import model.User;
 
 import java.util.HashSet;
@@ -10,12 +10,12 @@ import java.util.Set;
 public class Marketing {
 
     public void analyzeData
-            (List<Purchase> records, User viewer) {
+            (List<PurchaseData> records, User viewer) {
         System.out.println("Running marketing analysis for: " + viewer.name);
 
         Set<String> seen = new HashSet<>();
 
-        for (Purchase record : records) {
+        for (PurchaseData record : records) {
             User buyer = record.buyer;
             String bookTitle = record.book.title;
             String uniqueKey = buyer.name + "|" + bookTitle;
