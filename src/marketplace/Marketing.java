@@ -9,7 +9,8 @@ import java.util.Set;
 
 public class Marketing {
 
-    public void marketingData(List<PurchaseData> records, User viewer) {
+    public void analyzeData
+            (List<PurchaseData> records, User viewer) {
         System.out.println("Running marketing analysis for: " + viewer.name);
 
         Set<String> seen = new HashSet<>();

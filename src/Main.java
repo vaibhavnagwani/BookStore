@@ -21,6 +21,7 @@ public class Main {
             User alice = new User("Alice", "customer", "123 Main St", true);
             User bob = new User("Bob", "vendor", "456 Vendor Ln", false);
             User admin = new User("Admin", "marketplace", "HQ", false);
+            User vaibhav = new User("Vaibhav", "customer", "C-23, Tech Street", false);
 
             conn.createStatement().executeUpdate(
                     "MERGE INTO Users (name, role, address, consentToMarketing) KEY(name) VALUES " +
@@ -34,6 +35,10 @@ public class Main {
                     "MERGE INTO Users (name, role, address, consentToMarketing) KEY(name) VALUES " +
                             "('Admin', 'marketplace', 'HQ', false)"
             );
+            conn.createStatement().executeUpdate(
+                    "MERGE INTO Users (name, role, address, consentToMarketing) KEY(name) VALUES " +
+                            "('Vaibhav', 'customer', 'C-23, Tech Street', false)"
+            );
 
             Book book1 = new Book(
                     "Core Java",
@@ -45,7 +50,7 @@ public class Main {
                     "TechBooks",
                     "New",
                     "Comprehensive Java guide",
-                    1 // initial stock, will be updated by offer logic
+                    1
             );
 
             System.out.println("Offering book to the marketplace...");
@@ -53,16 +58,21 @@ public class Main {
 
             System.out.println("\nSearch results for 'Java':");
             List<Book> results = store.search("Java", alice);
-            if (!results.isEmpty()) {
+            if (results.isEmpty()) {
+                System.out.println("No matching books found.");
+            } else {
                 for (Book b : results) {
                     System.out.println(b);
                 }
             }
 
+            System.out.println("\nAlice attempting purchase...");
+            String confirmation1 = store.purchase(1, alice, 40);
+            System.out.println(confirmation1);
 
-            System.out.println("\nAttempting purchase...");
-            String confirmation = store.purchase(1, alice, 40);
-            System.out.println(confirmation);
+            System.out.println("\nVaibhav attempting purchase...");
+            String confirmation2 = store.purchase(1, vaibhav, 40);
+            System.out.println(confirmation2);
 
             System.out.println("\nBooks currently in stock:");
             PreparedStatement ps = conn.prepareStatement(
@@ -93,7 +103,7 @@ public class Main {
             System.out.println("\nMarketing report for Admin:");
             Marketing marketing = new Marketing();
             List<PurchaseData> purchases = store.getAllPurchases(conn);
-            marketing.marketingData(purchases, admin);
+            marketing.analyzeData(purchases, admin);
 
         } catch (SQLException e) {
             e.printStackTrace();
