@@ -2,30 +2,27 @@ package marketplace;
 
 import model.PurchaseData;
 import model.User;
-import security.Label;
-import security.Principal;
-import security.SecurityMngr;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Marketing {
 
-    public void analyzeData(List<PurchaseData> records, User viewer) {
-        System.out.println("Running marketing analysis for authorized viewer: " + viewer.name);
+    public void marketingData(List<PurchaseData> records, User viewer) {
+        System.out.println("Running marketing analysis for: " + viewer.name);
+
+        Set<String> seen = new HashSet<>();
+
         for (PurchaseData record : records) {
             User buyer = record.buyer;
-            Label label = record.label;
+            String bookTitle = record.book.title;
+            String uniqueKey = buyer.name + "|" + bookTitle;
 
-            if (!SecurityMngr.isAuthorizedToView(viewer, label)) {
-                System.out.println("- [Restricted]");
-                continue;
-            }
-
-            if (buyer.consentToMarketing) {
-                System.out.println("- " + buyer.name + " bought " + record.book.title +
+            if (buyer.consentToMarketing && !seen.contains(uniqueKey)) {
+                seen.add(uniqueKey);
+                System.out.println("- " + buyer.name + " bought " + bookTitle +
                         " (Shipping: " + buyer.address + ")");
-            } else {
-                System.out.println("- " + buyer.name + " opted out of marketing.");
             }
         }
     }

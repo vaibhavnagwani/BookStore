@@ -16,7 +16,6 @@ public class Main {
     public static void main(String[] args) {
         try {
             Connection conn = DriverManager.getConnection("jdbc:h2:./bookmarketdb", "sa", "");
-
             BookMarketplace store = new BookMarketplace(conn);
 
             User alice = new User("Alice", "customer", "123 Main St", true);
@@ -45,27 +44,29 @@ public class Main {
                     "1st",
                     "TechBooks",
                     "New",
-                    "Comprehensive Java guide"
+                    "Comprehensive Java guide",
+                    1 // initial stock, will be updated by offer logic
             );
+
+            System.out.println("Offering book to the marketplace...");
             store.offer(book1, bob);
 
             System.out.println("\nSearch results for 'Java':");
             List<Book> results = store.search("Java", alice);
-            if (results.isEmpty()) {
-                System.out.println("No matching books found.");
-            } else {
+            if (!results.isEmpty()) {
                 for (Book b : results) {
                     System.out.println(b);
                 }
             }
 
+
+            System.out.println("\nAttempting purchase...");
             String confirmation = store.purchase(1, alice, 40);
-            System.out.println("\n" + confirmation);
+            System.out.println(confirmation);
 
             System.out.println("\nBooks currently in stock:");
             PreparedStatement ps = conn.prepareStatement(
-                    "SELECT * FROM Books WHERE NOT EXISTS " +
-                            "(SELECT 1 FROM Purchases p WHERE p.bookId = Books.id)"
+                    "SELECT * FROM Books WHERE stock > 0"
             );
             ResultSet rs = ps.executeQuery();
             boolean anyInStock = false;
@@ -80,7 +81,8 @@ public class Main {
                         rs.getString("edition"),
                         rs.getString("publisher"),
                         rs.getString("book_condition"),
-                        rs.getString("description")
+                        rs.getString("description"),
+                        rs.getInt("stock")
                 );
                 System.out.println(b);
             }
@@ -91,7 +93,7 @@ public class Main {
             System.out.println("\nMarketing report for Admin:");
             Marketing marketing = new Marketing();
             List<PurchaseData> purchases = store.getAllPurchases(conn);
-            marketing.analyzeData(purchases, admin);
+            marketing.marketingData(purchases, admin);
 
         } catch (SQLException e) {
             e.printStackTrace();
